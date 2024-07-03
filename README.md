@@ -25,7 +25,7 @@ Authors: [Fei Zhao*](https://scholar.google.com/citations?user=V01xzWQAAAAJ&hl=z
 
 We recommend to use docker to prepare the environment.
 
-1. Clone this repository and navigate to AlignGPT folder
+1. Clone this repository and navigate to AlignGPT_family folder
 
 ```bash
 git clone https://github.com/AlignGPT-VL/AlignGPT_family.git
@@ -51,11 +51,11 @@ More `-v` options can be added to mount the data and output directories.
 
 ### Conda
 
-1. Clone this repository and navigate to AlignGPT folder
+1. Clone this repository and navigate to AlignGPT_family folder
 
 ```bash
 git clone https://github.com/AlignGPT-VL/AlignGPT_family.git
-cd AlignGPT
+cd AlignGPT_family
 ```
 
 2. Install Package
