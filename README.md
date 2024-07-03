@@ -36,7 +36,7 @@ cd AlignGPT
 
 ```bash
 cd deploy
-docker build -t aligngpt:1.0 .
+docker build -t aligngpt:2.0 .
 ```
 
 If your machine cannot connect to github to download the flash attention pip wheel, you can download it manually on https://github.com/Dao-AILab/flash-attention/releases/download/v2.5.5/flash_attn-2.5.5+cu118torch2.1cxx11abiFALSE-cp310-cp310-linux_x86_64.whl and put it to `deploy/flash_attn-2.5.5+cu118torch2.1cxx11abiFALSE-cp310-cp310-linux_x86_64.whl`.
@@ -44,7 +44,7 @@ If your machine cannot connect to github to download the flash attention pip whe
 3. To start the container, run the following command in the project root directory
 
 ```bash
-docker run --gpus all --ipc=host --network=host --rm -it -v .:/workspace aligngpt:1.0
+docker run --gpus all --ipc=host --network=host --rm -it -v .:/workspace aligngpt:2.0
 ```
 
 More `-v` options can be added to mount the data and output directories.
