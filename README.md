@@ -1,7 +1,7 @@
 
-# AlignGPT: Multi-modal Large Language Models with Adaptive Alignment Capability
-[[Project Page](https://aligngpt-vl.github.io/)] [[Paper](https://arxiv.org/abs/2405.14129)] [[Demo](http://47.116.173.89:7870/)] [[Model](https://huggingface.co/nlpzhaof)]
+# A Family of Multi-modal Large Language Model AlignGPT
 
+[[Project Page](https://aligngpt-vl.github.io/)] [[Paper](https://arxiv.org/abs/2405.14129)] [[Demo](http://47.116.173.89:7870/)] [[Model](https://huggingface.co/nlpzhaof)]
 
 
 Authors: [Fei Zhao*](https://scholar.google.com/citations?user=V01xzWQAAAAJ&hl=zh-CN), Taotian Pang*, Chunhui Li, [Zhen Wu](https://scholar.google.com/citations?user=IoGlgtoAAAAJ&hl=zh-CN), Junjie Guo, Shangyu Xing, [Xinyu Dai](https://scholar.google.com/citations?user=zpWB1CgAAAAJ&hl=zh-CN)
@@ -10,21 +10,14 @@ Authors: [Fei Zhao*](https://scholar.google.com/citations?user=V01xzWQAAAAJ&hl=z
 <!-- ![architecture](./assert/architecture.png) -->
 
 ## News and Updates
-- [5/24] 🔥 We released **AlignGPT: Multi-modal Large Language Models with Adaptive Alignment Capability**.  Checkout the [paper](https://arxiv.org/abs/2405.14129) and [demo](http://47.116.173.89:7870/).
-- [6/01] 🔥 Our [training data](https://www.alipan.com/s/oZsvtBAFSry) and [evaluation data](https://www.alipan.com/s/oZsvtBAFSry) are available now!
-- [6/09] 🔥 We will release the AlignGPT family, which supports a variety of large language models and visual backbones.
 - [7/03] 🔥 Our code supports a variety of large language models, including LLaMA-3-8B-Base, LLaMA-3-8B-Instruct, phi-1_5, phi-2, gemma-7b and Mistral-7B-Instruct-v0.2.
-- [7/03] 🔥 Our code support a visual backbone siglip-so400m-patch14-384.
-
-
-
+- [7/03] 🔥 Our code support a visual backbone siglip-so400m-patch14-384 and various image resolutions.
 
 ## Contents
 - [Install](#install)
 - [Model Zoo](#model-zoo)
 - [Training](#training)
 - [Evaluation](#evaluation)
-- [Performance](#performance)
 
 ## Install
 
