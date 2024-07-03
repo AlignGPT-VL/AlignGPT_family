@@ -28,7 +28,7 @@ We recommend to use docker to prepare the environment.
 1. Clone this repository and navigate to AlignGPT folder
 
 ```bash
-git clone https://github.com/AlignGPT-VL/AlignGPT.git
+git clone https://github.com/AlignGPT-VL/AlignGPT_family.git
 cd AlignGPT
 ```
 
@@ -54,7 +54,7 @@ More `-v` options can be added to mount the data and output directories.
 1. Clone this repository and navigate to AlignGPT folder
 
 ```bash
-git clone https://github.com/AlignGPT-VL/AlignGPT.git
+git clone https://github.com/AlignGPT-VL/AlignGPT_family.git
 cd AlignGPT
 ```
 
