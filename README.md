@@ -29,7 +29,7 @@ We recommend to use docker to prepare the environment.
 
 ```bash
 git clone https://github.com/AlignGPT-VL/AlignGPT_family.git
-cd AlignGPT
+cd AlignGPT_family
 ```
 
 2. Build the docker image
