@@ -7,26 +7,17 @@ DATA_DIR=${MAIN_DIR}/playground/data
 
 CUR_DIR=./
 
-N_INDICATORS=4
-
-PT_OUTPUT=aligngpt-7b-pretrain_ind-${N_INDICATORS}
-
+PT_OUTPUT=aligngpt-7b-pretrain_siglip
 BIN_NAME=mm_projector_align.bin
-
-FT_OUTPUT=aligngpt-7b_ind-${N_INDICATORS}
-
-
-# --data_path ${MAIN_DIR}/playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k_with_similarity_number_${N_INDICATORS}.json \
-# --data_path ${CUR_DIR}/data/test.json \
+FT_OUTPUT=aligngpt-7b_siglip
 
 deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src/train/train_mem_flash.py \
     --deepspeed ${CUR_DIR}/scripts/zero2.json \
     --model_name_or_path ${LLM_DIR}/vicuna-7b-v1.5 \
     --version plain \
-    --n_indicators ${N_INDICATORS} \
-    --data_path ${MAIN_DIR}/playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k_with_similarity_number_${N_INDICATORS}.json \
+    --data_path ${MAIN_DIR}/playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k_with_similarity_number.json \
     --image_folder ${DATA_DIR}/LLaVA-Pretrain/images \
-    --vision_tower ${V_DIR}/clip-vit-large-patch14-336 \
+    --vision_tower ${V_DIR}/siglip-so400m-patch14-384 \
     --mm_projector_type mlp2x_gelu \
     --tune_mm_mlp_adapter True \
     --mm_vision_select_layer -2 \
@@ -53,16 +44,15 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
     --report_to wandb \
-    --stage pretrain
+    --stage pretrain \
 
-deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src/train/train_mem_flash.py \
+deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30001 ${CUR_DIR}/src/train/train_mem_flash.py \
     --deepspeed ${MAIN_DIR}/scripts/zero3.json \
     --model_name_or_path ${LLM_DIR}/vicuna-7b-v1.5 \
     --version v1 \
-    --n_indicators ${N_INDICATORS} \
     --data_path ${MAIN_DIR}/playground/data/llava_v1_5_mix665k.json \
     --image_folder ${MAIN_DIR}/playground/data \
-    --vision_tower  ${V_DIR}/clip-vit-large-patch14-336 \
+    --vision_tower  ${V_DIR}/siglip-so400m-patch14-384 \
     --pretrain_mm_mlp_align ${CUR_DIR}/checkpoints/${PT_OUTPUT}/${BIN_NAME} \
     --mm_projector_type mlp2x_gelu \
     --mm_vision_select_layer -2 \
@@ -92,3 +82,4 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src
     --lazy_preprocess True \
     --report_to wandb \
     --stage finetune \
+

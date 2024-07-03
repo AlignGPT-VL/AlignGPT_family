@@ -1,31 +1,25 @@
 #!/bin/bash
 
+LLM_DIR=/workspace/hal/llava_model
 V_DIR=/workspace/hal/visual_tower
 MAIN_DIR=/workspace/hal/LLaVA
 DATA_DIR=${MAIN_DIR}/playground/data
 
 CUR_DIR=./
 
-# PT_OUTPUT=aligngpt-7b-pretrain_llama3_chat
-PT_OUTPUT=aligngpt-7b-pretrain_mistral
-
-# PT_OUTDIR=/workspace/hal/checkpoints/pretrain/aligngpt-7b-pretrain-llama3
-LM3_DIR=/workspace/hal/llava_model/mistral_7b_instruct_v02
-
+PT_OUTPUT=aligngpt-7b-pretrain_siglip_s2
 BIN_NAME=mm_projector_align.bin
+FT_OUTPUT=aligngpt-7b_siglip_s2
 
-FT_OUTPUT=aligngpt-7b_mistral
-
-# --data_path ${MAIN_DIR}/playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k_with_similarity_number.json \
-# --data_path ${CUR_DIR}/data/test.json \
+S2_SCACLES='384,768'
 
 deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src/train/train_mem_flash.py \
     --deepspeed ${CUR_DIR}/scripts/zero2.json \
-    --model_name_or_path ${LM3_DIR} \
+    --model_name_or_path ${LLM_DIR}/vicuna-7b-v1.5 \
     --version plain \
     --data_path ${MAIN_DIR}/playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k_with_similarity_number.json \
     --image_folder ${DATA_DIR}/LLaVA-Pretrain/images \
-    --vision_tower ${V_DIR}/clip-vit-large-patch14-336 \
+    --vision_tower ${V_DIR}/siglip-so400m-patch14-384 \
     --mm_projector_type mlp2x_gelu \
     --tune_mm_mlp_adapter True \
     --mm_vision_select_layer -2 \
@@ -51,16 +45,18 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
-    --report_to none \
-    --stage pretrain
+    --report_to wandb \
+    --stage pretrain \
+    --use_s2 True \
+    --s2_scales ${S2_SCACLES}
 
 deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30001 ${CUR_DIR}/src/train/train_mem_flash.py \
     --deepspeed ${MAIN_DIR}/scripts/zero3.json \
-    --model_name_or_path ${LM3_DIR} \
-    --version conv_mistral \
+    --model_name_or_path ${LLM_DIR}/vicuna-7b-v1.5 \
+    --version v1 \
     --data_path ${MAIN_DIR}/playground/data/llava_v1_5_mix665k.json \
     --image_folder ${MAIN_DIR}/playground/data \
-    --vision_tower  ${V_DIR}/clip-vit-large-patch14-336 \
+    --vision_tower  ${V_DIR}/siglip-so400m-patch14-384 \
     --pretrain_mm_mlp_align ${CUR_DIR}/checkpoints/${PT_OUTPUT}/${BIN_NAME} \
     --mm_projector_type mlp2x_gelu \
     --mm_vision_select_layer -2 \
@@ -88,5 +84,8 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30001 ${CUR_DIR}/src
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
-    --report_to none \
+    --report_to wandb \
     --stage finetune \
+    --use_s2 True \
+    --s2_scales ${S2_SCACLES}
+

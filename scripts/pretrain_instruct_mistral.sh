@@ -1,23 +1,17 @@
 #!/bin/bash
 
-LLM_DIR=/workspace/hal/llava_model
 V_DIR=/workspace/hal/visual_tower
 MAIN_DIR=/workspace/hal/LLaVA
 DATA_DIR=${MAIN_DIR}/playground/data
 
 CUR_DIR=./
 
-PT_OUTPUT=aligngpt-7b-pretrain_llama3
-
-# PT_OUTDIR=/workspace/hal/checkpoints/pretrain/aligngpt-7b-pretrain-llama3
-LM3_DIR=/workspace/hal/llava_model/llama-3-8b-hf
+PT_OUTPUT=aligngpt-7b-pretrain_mistral
+LM3_DIR=/workspace/hal/llava_model/Mistral-7B-Instruct-v0.2
 
 BIN_NAME=mm_projector_align.bin
 
-FT_OUTPUT=aligngpt-7b_llama3_bunny
-
-# --data_path ${MAIN_DIR}/playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k_with_similarity_number.json \
-# --data_path ${CUR_DIR}/data/test.json \
+FT_OUTPUT=aligngpt-7b_mistral
 
 deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src/train/train_mem_flash.py \
     --deepspeed ${CUR_DIR}/scripts/zero2.json \
@@ -51,16 +45,13 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
-    --report_to none \
+    --report_to wandb \
     --stage pretrain
 
-
-# --model_name_or_path ${LLM_DIR}/vicuna-7b-v1.5 \
-# --pretrain_mm_mlp_align ${CUR_DIR}/checkpoints/${PT_OUTPUT}/${BIN_NAME} \
-deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src/train/train_mem_flash.py \
+deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30001 ${CUR_DIR}/src/train/train_mem_flash.py \
     --deepspeed ${MAIN_DIR}/scripts/zero3.json \
     --model_name_or_path ${LM3_DIR} \
-    --version llama_3 \
+    --version conv_mistral \
     --data_path ${MAIN_DIR}/playground/data/llava_v1_5_mix665k.json \
     --image_folder ${MAIN_DIR}/playground/data \
     --vision_tower  ${V_DIR}/clip-vit-large-patch14-336 \
@@ -74,9 +65,9 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src
     --bf16 True \
     --output_dir ${CUR_DIR}/checkpoints/${FT_OUTPUT} \
     --num_train_epochs 1 \
-    --per_device_train_batch_size 8 \
+    --per_device_train_batch_size 16 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 2 \
+    --gradient_accumulation_steps 1 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
     --save_steps 50000 \
@@ -91,5 +82,5 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
-    --report_to none \
+    --report_to wandb \
     --stage finetune \

@@ -7,24 +7,22 @@ DATA_DIR=${MAIN_DIR}/playground/data
 
 CUR_DIR=./
 
-N_INDICATORS=8
+# PT_OUTPUT=aligngpt-7b-pretrain_llama3_chat
+PT_OUTPUT=aligngpt-8b-pretrain_llama3_instruct
 
-PT_OUTPUT=aligngpt-13b-pretrain_ind-${N_INDICATORS}
+# PT_OUTDIR=/workspace/hal/checkpoints/pretrain/aligngpt-7b-pretrain-llama3
+LM3_DIR=/workspace/hal/llava_model/llama-3-8b-chat-hf
 
 BIN_NAME=mm_projector_align.bin
 
-FT_OUTPUT=aligngpt-13b_ind-${N_INDICATORS}
+FT_OUTPUT=aligngpt-8b_llama3_instruct
 
 
-# --data_path ${MAIN_DIR}/playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k_with_similarity_number_${N_INDICATORS}.json \
-# --data_path ${CUR_DIR}/data/test.json \
-
-deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30001 ${CUR_DIR}/src/train/train_mem_flash.py \
+deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src/train/train_mem_flash.py \
     --deepspeed ${CUR_DIR}/scripts/zero2.json \
-    --model_name_or_path ${LLM_DIR}/vicuna-13b-v1.5 \
+    --model_name_or_path ${LM3_DIR} \
     --version plain \
-    --n_indicators ${N_INDICATORS} \
-    --data_path ${MAIN_DIR}/playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k_with_similarity_number_${N_INDICATORS}.json \
+    --data_path ${MAIN_DIR}/playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k_with_similarity_number.json \
     --image_folder ${DATA_DIR}/LLaVA-Pretrain/images \
     --vision_tower ${V_DIR}/clip-vit-large-patch14-336 \
     --mm_projector_type mlp2x_gelu \
@@ -55,11 +53,11 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30001 ${CUR_DIR}/src
     --report_to wandb \
     --stage pretrain
 
-deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30002 ${CUR_DIR}/src/train/train_mem_flash.py \
+
+deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30001 ${CUR_DIR}/src/train/train_mem_flash.py \
     --deepspeed ${MAIN_DIR}/scripts/zero3.json \
-    --model_name_or_path ${LLM_DIR}/vicuna-13b-v1.5 \
-    --version v1 \
-    --n_indicators ${N_INDICATORS} \
+    --model_name_or_path ${LM3_DIR} \
+    --version llama_3 \
     --data_path ${MAIN_DIR}/playground/data/llava_v1_5_mix665k.json \
     --image_folder ${MAIN_DIR}/playground/data \
     --vision_tower  ${V_DIR}/clip-vit-large-patch14-336 \
@@ -73,9 +71,9 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30002 ${CUR_DIR}/src
     --bf16 True \
     --output_dir ${CUR_DIR}/checkpoints/${FT_OUTPUT} \
     --num_train_epochs 1 \
-    --per_device_train_batch_size 16 \
+    --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 1 \
+    --gradient_accumulation_steps 2 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
     --save_steps 50000 \

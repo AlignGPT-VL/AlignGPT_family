@@ -7,17 +7,11 @@ DATA_DIR=${MAIN_DIR}/playground/data
 
 CUR_DIR=./
 
-N_INDICATORS=6
+N_INDICATORS=8
 
 PT_OUTPUT=aligngpt-7b-pretrain_ind-${N_INDICATORS}
-
 BIN_NAME=mm_projector_align.bin
-
 FT_OUTPUT=aligngpt-7b_ind-${N_INDICATORS}
-
-
-# --data_path ${MAIN_DIR}/playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k_with_similarity_number_${N_INDICATORS}.json \
-# --data_path ${CUR_DIR}/data/test.json \
 
 deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30001 ${CUR_DIR}/src/train/train_mem_flash.py \
     --deepspeed ${CUR_DIR}/scripts/zero2.json \
