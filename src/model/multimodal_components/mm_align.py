@@ -48,21 +48,15 @@ class GatedWeightLayer(nn.Module):
         super().__init__()
         
         self.dim = config.hidden_size
-        self.mlp = nn.Sequential(*[nn.Linear(N_IMAGE_TOKEN, 256), # TODO: 图片长度如果有变化
+        self.mlp = nn.Sequential(*[nn.Linear(N_IMAGE_TOKEN, 256),
                                    nn.GELU(),
                                    nn.Linear(256, config.n_indicators-1)])
 
     def forward(self, image_embeds, text_embeds, text_attention_mask):
         scale = torch.sum(text_attention_mask.int(), dim=-1, keepdim=True).to(dtype=text_embeds.dtype)
         avg_text_embeds = torch.sum(text_embeds, dim=1) / (scale + 1e-8)
-        # 16, 769, 4096
-        # 16, 576, 4096
-        # print(image_embeds.shape)
-        dots = torch.sum(image_embeds * avg_text_embeds.unsqueeze(dim=1), dim=-1)  
-        # 16, 768
-        # 16, 576 
-        # print(dots.shape)
-        scores = self.mlp(dots) # [bs, 7]
+        dots = torch.sum(image_embeds * avg_text_embeds.unsqueeze(dim=1), dim=-1)
+        scores = self.mlp(dots)
         scores = scores.softmax(dim=-1)
 
         return scores

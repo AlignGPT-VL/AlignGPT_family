@@ -14,31 +14,31 @@ INF_MODE='inference'
 
 CKPT="aligngpt-7b_llama3"
 
-# for IDX in $(seq 0 $((CHUNKS-1))); do
-#     CUDA_VISIBLE_DEVICES=${GPULIST[$IDX]} python -m src.eval.model_vqa_loader \
-#         --model-path /workspace/hal/AlignGPT/checkpoints/aligngpt-7b_llama3 \
-#         --inference_mode ${INF_MODE} \
-#         --question-file /workspace/hal/LLaVA/playground/data/eval/seed_bench/llava-seed-bench-2.jsonl \
-#         --image-folder /workspace/hal/LLaVA/playground/data/eval/seed_bench/ \
-#         --answers-file /workspace/hal/LLaVA/playground/data/eval/seed_bench/answers/$CKPT/${CHUNKS}_${IDX}.jsonl \
-#         --num-chunks $CHUNKS \
-#         --chunk-idx $IDX \
-#         --temperature 0 \
-#         --conv-mode llama_3 &
-# done
+for IDX in $(seq 0 $((CHUNKS-1))); do
+    CUDA_VISIBLE_DEVICES=${GPULIST[$IDX]} python -m src.eval.model_vqa_loader \
+        --model-path /workspace/hal/AlignGPT/checkpoints/aligngpt-7b_llama3 \
+        --inference_mode ${INF_MODE} \
+        --question-file /workspace/hal/LLaVA/playground/data/eval/seed_bench/llava-seed-bench-2.jsonl \
+        --image-folder /workspace/hal/LLaVA/playground/data/eval/seed_bench/ \
+        --answers-file /workspace/hal/LLaVA/playground/data/eval/seed_bench/answers/$CKPT/${CHUNKS}_${IDX}.jsonl \
+        --num-chunks $CHUNKS \
+        --chunk-idx $IDX \
+        --temperature 0 \
+        --conv-mode llama_3 &
+done
 
-# wait
+wait
 
 # output_file=./playground/data/eval/seed_bench/answers/$CKPT/merge.jsonl
 output_file=/workspace/hal/LLaVA/playground/data/eval/seed_bench/answers/$CKPT/merge_1.jsonl
 
 # Clear out the output file if it exists.
-# > "$output_file"
+> "$output_file"
 
-# # Loop through the indices and concatenate each file.
-# for IDX in $(seq 0 $((CHUNKS-1))); do
-#     cat /workspace/hal/LLaVA/playground/data/eval/seed_bench/answers/$CKPT/${CHUNKS}_${IDX}.jsonl >> "$output_file"
-# done
+# Loop through the indices and concatenate each file.
+for IDX in $(seq 0 $((CHUNKS-1))); do
+    cat /workspace/hal/LLaVA/playground/data/eval/seed_bench/answers/$CKPT/${CHUNKS}_${IDX}.jsonl >> "$output_file"
+done
 
 # Evaluate
 python scripts/convert_seed_for_submission.py \

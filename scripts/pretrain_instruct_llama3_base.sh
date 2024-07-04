@@ -6,9 +6,7 @@ MAIN_DIR=/workspace/hal/LLaVA
 DATA_DIR=${MAIN_DIR}/playground/data
 
 CUR_DIR=./
-
 PT_OUTPUT=aligngpt-8b-pretrain_llama3_base
-
 
 LM3_DIR=/workspace/hal/llava_model/llama-3-8b-hf
 BIN_NAME=mm_projector_align.bin
@@ -49,9 +47,6 @@ deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src
     --report_to wandb \
     --stage pretrain
 
-
-# --model_name_or_path ${LLM_DIR}/vicuna-7b-v1.5 \
-# --pretrain_mm_mlp_align ${CUR_DIR}/checkpoints/${PT_OUTPUT}/${BIN_NAME} \
 deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src/train/train_mem_flash.py \
     --deepspeed ${MAIN_DIR}/scripts/zero3.json \
     --model_name_or_path ${LM3_DIR} \

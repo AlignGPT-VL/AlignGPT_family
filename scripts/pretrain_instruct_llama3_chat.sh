@@ -6,15 +6,10 @@ MAIN_DIR=/workspace/hal/LLaVA
 DATA_DIR=${MAIN_DIR}/playground/data
 
 CUR_DIR=./
-
-# PT_OUTPUT=aligngpt-7b-pretrain_llama3_chat
 PT_OUTPUT=aligngpt-8b-pretrain_llama3_instruct
 
-# PT_OUTDIR=/workspace/hal/checkpoints/pretrain/aligngpt-7b-pretrain-llama3
 LM3_DIR=/workspace/hal/llava_model/llama-3-8b-chat-hf
-
 BIN_NAME=mm_projector_align.bin
-
 FT_OUTPUT=aligngpt-8b_llama3_instruct
 
 

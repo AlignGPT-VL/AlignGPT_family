@@ -4,7 +4,7 @@ import json
 
 import sys
 
-PROJECT_DIR = '/workspace/hal/AlignGPT'
+PROJECT_DIR = '/workspace/hal/AlignGPT_family'
 sys.path.append(os.path.abspath(PROJECT_DIR))
 
 

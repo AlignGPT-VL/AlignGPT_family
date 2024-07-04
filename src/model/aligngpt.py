@@ -4,14 +4,7 @@ import torch
 import torch.nn as nn
 
 from transformers import AutoConfig, AutoModelForCausalLM, LlamaConfig, LlamaModel, LlamaForCausalLM
-
-# from transformers import AutoConfig, AutoModelForCausalLM
-# from .language_model import LlamaModel, LlamaConfig, LlamaForCausalLM
-
 from transformers.modeling_outputs import CausalLMOutputWithPast
-
-# from transformers.integrations import is_deepspeed_zero3_enabled
-
 
 from .multimodal_components.vision_tower_builder import build_vision_tower
 from .multimodal_components.mm_projector_builder import build_vision_projector
@@ -103,7 +96,6 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
         if getattr(self, 'mm_projector', None) is None:
             self.mm_projector = build_vision_projector(self.config)
         else:
-            # In case it is frozen by LoRA
             for p in self.mm_projector.parameters():
                 p.requires_grad = True
     
@@ -171,15 +163,11 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
             elif self.stage == FINETUNE or self.stage == INFERENCE:
                 # print('finetune')
                 if images is not None and input_ids is None:
-                    # 对 finetune，总是经过这里，但可能整个 batch 全是空图
-                    # 对 inference，单条数据有图时
                     text_position_ids, text_attention_mask, text_embeds, text_labels = text_var_group
                     image_position_ids, image_attention_mask, image_embeds, image_labels = image_var_group
                     pure_text_position_ids, pure_text_attention_mask, pure_text_embeds, pure_text_labels = pure_text_var_group
                     
                     if len(image_embeds) > 0:
-                        # 当前 batch/数据 有真正的图
-                        # print('here')
                         w_scores = self.gated_weight_layer.forward(image_embeds, text_embeds[:, 1:, :], text_attention_mask[:, 1:])
                         align_indicators = self.align_indicators.lin_comb(w_scores).unsqueeze(dim=1) # [im_bs, 1, dim_size]
                         if self.stage == INFERENCE: align_indicators = align_indicators.to(device=inputs_embeds.device)
@@ -201,25 +189,19 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
                         raise ValueError(f'Shouldn\'t reach here')
                 
                 elif images is None:
-                    # 整个 batch 都没有图片时  
                     pass
                 else:
-                    # 有图，生成，对于 inference
-                    # print('in inference')
                     pass
             
             
             elif self.stage == FT_NOGATE or self.stage == IFC_NOGATE: 
                 # print('no gate')
                 if images is not None and input_ids is None:
-                    # 对 finetune，总是经过这里，但可能整个 batch 全是空图
-                    # 对 inference，单条数据有图时
                     text_position_ids, text_attention_mask, text_embeds, text_labels = text_var_group
                     image_position_ids, image_attention_mask, image_embeds, image_labels = image_var_group
                     pure_text_position_ids, pure_text_attention_mask, pure_text_embeds, pure_text_labels = pure_text_var_group
                     
                     if len(image_embeds) > 0:
-                        # 当前 batch/数据 有真正的图
                         align_indicators = self.align_indicators.mean_align().unsqueeze(dim=1).expand(len(image_embeds), -1, -1) # [im_bs, 1, dim_size]
                         if self.stage == IFC_NOGATE: align_indicators = align_indicators.to(device=inputs_embeds.device)
                         
@@ -241,14 +223,11 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
             elif self.stage == FT_LOCAL or self.stage == IFC_LOCAL:
                 # print('local')
                 if images is not None and input_ids is None:
-                    # 对 finetune，总是经过这里，但可能整个 batch 全是空图
-                    # 对 inference，单条数据有图时
                     text_position_ids, text_attention_mask, text_embeds, text_labels = text_var_group
                     image_position_ids, image_attention_mask, image_embeds, image_labels = image_var_group
                     pure_text_position_ids, pure_text_attention_mask, pure_text_embeds, pure_text_labels = pure_text_var_group
                     
                     if len(image_embeds) > 0:
-                        # 当前 batch/数据 有真正的图
                         w_scores = self.gated_weight_layer.forward(image_embeds, text_embeds[:, 1:, :], text_attention_mask[:, 1:])
                         align_indicators = self.align_indicators.lin_comb_local(w_scores).unsqueeze(dim=1) # [im_bs, 1, dim_size]
                         if self.stage == IFC_LOCAL: align_indicators = align_indicators.to(device=inputs_embeds.device)
@@ -269,16 +248,12 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
                     if len(image_embeds) == 0 and pure_text_embeds is None:
                         raise ValueError(f'Shouldn\'t reach here')
             elif self.stage == FT_GLOBAL or self.stage == IFC_GLOBAL:
-                # print('global')
                 if images is not None and input_ids is None:
-                    # 对 finetune，总是经过这里，但可能整个 batch 全是空图
-                    # 对 inference，单条数据有图时
                     text_position_ids, text_attention_mask, text_embeds, text_labels = text_var_group
                     image_position_ids, image_attention_mask, image_embeds, image_labels = image_var_group
                     pure_text_position_ids, pure_text_attention_mask, pure_text_embeds, pure_text_labels = pure_text_var_group
                     
                     if len(image_embeds) > 0:
-                        # 当前 batch/数据 有真正的图
                         align_indicators = self.align_indicators.global_align().unsqueeze(dim=1).expand(len(image_embeds), -1, -1) # [im_bs, 1, dim_size]
                         if self.stage == IFC_GLOBAL: align_indicators = align_indicators.to(device=inputs_embeds.device)
                         
@@ -297,19 +272,13 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
                     if len(image_embeds) == 0 and pure_text_embeds is None:
                         raise ValueError(f'Shouldn\'t reach here')
             elif self.stage == IFC_FIX:
-                # TODO: 该模式用于查看单条输入的输出情况，因此需要额外新写一个 generate 的 py 文件
-                
-
                 if images is not None and input_ids is None:
-                    # 对 finetune，总是经过这里，但可能整个 batch 全是空图
-                    # 对 inference，单条数据有图时
                     text_position_ids, text_attention_mask, text_embeds, text_labels = text_var_group
                     image_position_ids, image_attention_mask, image_embeds, image_labels = image_var_group
                     pure_text_position_ids, pure_text_attention_mask, pure_text_embeds, pure_text_labels = pure_text_var_group
                     # print('here4')
                     if len(image_embeds) > 0:
-                        # 当前 batch/数据 有真正的图
-                        # print(align_ids)
+                        
                         align_indicators = self.align_indicators(align_ids).expand((len(image_embeds), 1, -1)) # [bs, dim_size]
                         align_indicators = align_indicators.to(device=inputs_embeds.device)
                         
@@ -378,7 +347,6 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
                 )), dim=1)
                 position_ids = torch.sum(attention_mask, dim=1).unsqueeze(-1) - 1
             
-            # TODO: 返回值构成
             return input_ids, past_key_values, \
                 (position_ids, attention_mask, None, labels), \
                 None, \
@@ -394,8 +362,6 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
         else:
             image_features = self.encode_images(images).to(self.device)
         
-
-        # TODO: image start / end is not implemented here to support pretraining.
         if getattr(self.config, 'tune_mm_mlp_adapter', False) and getattr(self.config, 'mm_use_im_start_end', False):
             raise NotImplementedError
 
@@ -415,7 +381,6 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
         if labels is None:
             labels = torch.full_like(input_ids, IGNORE_INDEX)
 
-        # remove the padding using attention_mask -- TODO: double check
         input_ids = [cur_input_ids[cur_attention_mask] for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)]
         labels = [cur_labels[cur_attention_mask] for cur_labels, cur_attention_mask in zip(labels, attention_mask)]
 
@@ -430,7 +395,6 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
         for batch_idx, cur_input_ids in enumerate(input_ids): # a single sample
             num_images = (cur_input_ids == IMAGE_TOKEN_INDEX).sum()
             if num_images == 0:
-                # ============================= A conversation without images =============================
                 cur_image_features = image_features[cur_image_idx]
                 cur_input_embeds_1 = self.get_model().embed_tokens(cur_input_ids)
                 cur_input_embeds = torch.cat([cur_input_embeds_1, cur_image_features[0:0]], dim=0)
@@ -444,7 +408,6 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
                 cur_image_idx += 1
             
                 continue
-            # ============================= 分段提取出文本部分 =============================
             image_token_indices = [-1] + torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0].tolist() + [cur_input_ids.shape[0]]
             cur_input_ids_noim = []
             cur_labels = labels[batch_idx]
@@ -455,8 +418,6 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
             split_sizes = [x.shape[0] for x in cur_labels_noim]
             cur_input_embeds = self.get_model().embed_tokens(torch.cat(cur_input_ids_noim))
             cur_input_embeds_no_im = torch.split(cur_input_embeds, split_sizes, dim=0)
-            
-            # ============================= 按 bos、图、文本的顺序拼接 =============================
             cur_new_input_embeds, cur_new_labels = [], []
             cur_text_embeds, cur_text_labels = [], []
             cur_image_embeds, cur_image_labels = [], []
@@ -492,16 +453,9 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
             cur_image_labels = torch.cat(cur_image_labels)
             image_embeds.append(cur_image_embeds)
             image_labels.append(cur_image_labels)
-                    
-        # Truncate sequences to max length as image embeddings can make the sequence longer
-        # TODO：不再对 image 和 text embeds 单独截断，
-        # 它们后续只用作计算 gate 分数，不用限制到 LLM 的最大输入长度
         tokenizer_model_max_length = getattr(self.config, 'tokenizer_model_max_length', None)
-        
-        
-        # ============================= 进行补齐操作 =============================
+
         if len(new_input_embeds) > 0:
-            # 当前 batch 里面存在有图的数据
             if tokenizer_model_max_length is not None:
                 real_model_max_length = tokenizer_model_max_length - N_INDICATOR_TOKEN
                 new_input_embeds = [x[:real_model_max_length] for x in new_input_embeds]
@@ -547,7 +501,6 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
                         new_embed_cur
                     ), dim=0))
                     if cur_len > 0:
-                        # 比 embeds 的 seq len 长 N_INDICATOR_TOKEN 个长度
                         new_labels_padded[i, -(cur_len+N_INDICATOR_TOKEN):-(cur_len+N_INDICATOR_TOKEN-1)] = new_labels_cur[:1]
                         new_labels_padded[i, -(cur_len+N_INDICATOR_TOKEN-1):-(cur_len-1)] = torch.full((N_INDICATOR_TOKEN,), IGNORE_INDEX, device=new_labels_cur.device, dtype=new_labels_cur.dtype)
                         new_labels_padded[i, -(cur_len-1):] = new_labels_cur[1:]
@@ -577,7 +530,6 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
                         torch.zeros((max_len - cur_len, new_embed_cur.shape[1]), dtype=new_embed_cur.dtype, device=new_embed_cur.device)
                     ), dim=0))
                     if cur_len > 0:
-                        # 比 embeds 的 seq len 长 N_INDICATOR_TOKEN 个长度
                         new_labels_padded[i, :1] = new_labels_cur[:1]
                         new_labels_padded[i, 1:N_INDICATOR_TOKEN+1] = torch.full((N_INDICATOR_TOKEN,), IGNORE_INDEX, device=new_labels_cur.device, dtype=new_labels_cur.dtype)
                         new_labels_padded[i, N_INDICATOR_TOKEN+1:N_INDICATOR_TOKEN+cur_len] = new_labels_cur[1:]
@@ -607,7 +559,6 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
             image_embeds = torch.stack(image_embeds_padded, dim=0)
         
         if pure_text_embeds is not None:
-            # ============================= 确实有样本没有图片时 =============================
             if len(new_input_embeds) > 0:
                 max_pure_len = new_input_embeds.shape[1] + N_INDICATOR_TOKEN
                 # max_pure_len = new_labels.shape[1]
@@ -705,12 +656,10 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
     
     def initialize_vision_tokenizer(self, model_args, tokenizer):
         if model_args.mm_use_im_patch_token:
-            # TODO：不进入
             tokenizer.add_tokens([DEFAULT_IMAGE_PATCH_TOKEN], special_tokens=True)
             self.resize_token_embeddings(len(tokenizer))
 
         if model_args.mm_use_im_start_end:
-            # TODO: 不进入
             num_new_tokens = tokenizer.add_tokens([DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN], special_tokens=True)
             self.resize_token_embeddings(len(tokenizer))
 
@@ -743,7 +692,6 @@ class AlignGPTForCausalLM(LlamaForCausalLM):
                 else:
                     raise ValueError(f"Unexpected embed_tokens_weight shape. Pretrained: {embed_tokens_weight.shape}. Current: {input_embeddings.shape}. Numer of new tokens: {num_new_tokens}.")
         elif model_args.mm_use_im_patch_token:
-            # TODO：不进入
             if model_args.tune_mm_mlp_adapter:
                 for p in self.get_input_embeddings().parameters():
                     p.requires_grad = False

@@ -1,5 +1,5 @@
 
-# A Family of Multi-modal Large Language Model AlignGPT
+# AlignGPT Family: Support Various Large Language Models and Visual Backbones
 
 [[Project Page](https://aligngpt-vl.github.io/)] [[Paper](https://arxiv.org/abs/2405.14129)] [[Demo](http://47.116.173.89:7870/)] [[Model](https://huggingface.co/nlpzhaof)]
 
@@ -63,7 +63,7 @@ cd AlignGPT_family
 ```Shell
 conda create -n aligngpt python=3.10 -y
 conda activate aligngpt
-pip install --upgrade pip  # enable PEP 660 support
+pip install --upgrade pip
 pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu118
 pip install -r deploy/requirements.txt
 ```

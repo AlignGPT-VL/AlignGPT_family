@@ -5,16 +5,14 @@ INF_MODE='inference'
 # INF_MODE='inference-local'
 # INF_MODE='inference-global'
 
-# --inference_mode ${INF_MODE} \
-
-# python -m src.eval.model_vqa_loader \
-#     --model-path /workspace/hal/AlignGPT/checkpoints/aligngpt-7b_llama3 \
-#     --inference_mode ${INF_MODE} \
-#     --question-file /workspace/hal/LLaVA/playground/data/eval/MME/llava_mme_1.jsonl \
-#     --image-folder /workspace/hal/LLaVA/playground/data/eval/MME/MME_Benchmark_release_version \
-#     --answers-file /workspace/hal/LLaVA/playground/data/eval/MME/answers/aligngpt-7b_llama3.jsonl \
-#     --temperature 0 \
-#     --conv-mode llama_3
+python -m src.eval.model_vqa_loader \
+    --model-path /workspace/hal/AlignGPT/checkpoints/aligngpt-7b_llama3 \
+    --inference_mode ${INF_MODE} \
+    --question-file /workspace/hal/LLaVA/playground/data/eval/MME/llava_mme_1.jsonl \
+    --image-folder /workspace/hal/LLaVA/playground/data/eval/MME/MME_Benchmark_release_version \
+    --answers-file /workspace/hal/LLaVA/playground/data/eval/MME/answers/aligngpt-7b_llama3.jsonl \
+    --temperature 0 \
+    --conv-mode llama_3
 
 cd /workspace/hal/LLaVA/playground/data/eval/MME
 

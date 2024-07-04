@@ -5,8 +5,6 @@ INF_MODE='inference'
 # INF_MODE='inference-local'
 # INF_MODE='inference-global'
 
-# --inference_mode ${INF_MODE} \
-
 python -m src.eval.model_vqa_loader \
     --model-path /workspace/hal/AlignGPT/checkpoints/aligngpt-7b \
     --inference_mode ${INF_MODE} \

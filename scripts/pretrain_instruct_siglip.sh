@@ -6,7 +6,6 @@ MAIN_DIR=/workspace/hal/LLaVA
 DATA_DIR=${MAIN_DIR}/playground/data
 
 CUR_DIR=./
-
 PT_OUTPUT=aligngpt-7b-pretrain_siglip
 BIN_NAME=mm_projector_align.bin
 FT_OUTPUT=aligngpt-7b_siglip

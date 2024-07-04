@@ -33,7 +33,6 @@ class Conversation:
     def get_prompt(self):
         messages = self.messages
         if len(messages) > 0 and type(messages[0][1]) is tuple:
-            # 不会进入，message[0][1] 是 str
             messages = self.messages.copy()
             init_role, init_msg = messages[0].copy()
             init_msg = init_msg[0].replace("<image>", "").strip()
@@ -54,15 +53,12 @@ class Conversation:
                 else:
                     ret += role + ":"
         elif self.sep_style == SeparatorStyle.TWO:
-            # 微调时进入
-            seps = [self.sep, self.sep2] # sep=" ", sep2="</s>"
+            seps = [self.sep, self.sep2]
             ret = self.system + seps[0]
             for i, (role, message) in enumerate(messages):
                 if message:
                     if type(message) is tuple:
                         message, _, _ = message
-                    # 进入这里
-                    # 不断向 ret 字符串加上对话
                     ret += role + ": " + message + seps[i % 2]
                 else:
                     ret += role + ":"
@@ -117,7 +113,6 @@ class Conversation:
                 else:
                     ret += "<start_of_turn>" + role + "\n"
         elif self.sep_style == SeparatorStyle.PLAIN:
-            # pretrain 进入
             seps = [self.sep, self.sep2]
             ret = self.system
             for i, (role, message) in enumerate(messages):
@@ -127,8 +122,6 @@ class Conversation:
                     ret += message + seps[i % 2]
                 else:
                     ret += ""
-        # elif self.sep_style == SeparatorStyle.LLAMA_3:
-        #     pass 
         else:
             raise ValueError(f"Invalid style: {self.sep_style}")
 
@@ -318,42 +311,6 @@ conv_llava_llama_2 = Conversation(
     sep2="</s>",
 )
 
-# conv_llama_3 = Conversation(
-#     system="A chat between a curious user and an artificial intelligence assistant. "
-#            "The assistant gives helpful, detailed, and polite answers to the user's questions.",
-#     roles=("USER", "ASSISTANT"),
-#     version="llama_3",
-#     messages=(),
-#     offset=0,
-#     sep_style=SeparatorStyle.TWO,
-#     sep=" ",
-#     sep2="<|end_of_text|>",
-# )
-
-# conv_llama_3 = Conversation(
-#     system="You are a helpful language and vision assistant. " "You are able to understand the visual content that the user provides, " "and assist the user with a variety of tasks using natural language.",
-#     roles=("<|start_header_id|>user", "<|start_header_id|>assistant"),
-#     version="llama_3",
-#     messages=(),
-#     offset=0,
-#     sep_style=SeparatorStyle.TWO,
-#     sep=" ",
-#     sep2="<|end_of_text|>",
-# )
-
-# conv_llama_3 = Conversation(
-#     system="<|start_header_id|>system<|end_header_id|>\n\nYou are a helpful language and vision assistant. "
-#            "You are able to understand the visual content that the user provides, "
-#            "and assist the user with a variety of tasks using natural language.",
-#     roles=("<|start_header_id|>user<|end_header_id|>\n\n", 
-#            "<|start_header_id|>system<|end_header_id|>\n\n"),
-#     version="llama_3",
-#     messages=(),
-#     offset=0,
-#     sep_style=SeparatorStyle.LLAMA_3,
-#     sep="<|end_of_text|>",
-# )
-
 conv_llama_3 = Conversation(
     system="You are a helpful language and vision assistant. " "You are able to understand the visual content that the user provides, " "and assist the user with a variety of tasks using natural language.",
     roles=("<|start_header_id|>user", "<|start_header_id|>assistant"),
@@ -364,23 +321,6 @@ conv_llama_3 = Conversation(
     sep=" ",
     sep2="<|end_of_text|>",
 )
-
-# try:
-#     llama3_tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
-# except Exception as e:
-#     print("Error loading llama3 tokenizer")
-#     print(e)
-# conv_llava_llama_3 = Conversation(
-#     system="You are a helpful language and vision assistant. " "You are able to understand the visual content that the user provides, " "and assist the user with a variety of tasks using natural language.",
-#     roles=("<|start_header_id|>user", "<|start_header_id|>assistant"),
-#     version="llama_v3",
-#     messages=[],
-#     offset=0,
-#     sep_style=SeparatorStyle.LLAMA_3,
-#     tokenizer_id="meta-llama/Meta-Llama-3-8B-Instruct",
-#     tokenizer=llama3_tokenizer,
-#     stop_token_ids=[128009],
-# )
 
 conv_phi_1_5 = Conversation(
     system="A chat between a curious user and an artificial intelligence assistant. "

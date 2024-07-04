@@ -3,7 +3,6 @@ Usage:
 python3 -m src.model.consolidate --src ~/model_weights/aligngpt-7b --dst ~/model_weights/aligngpt-7b_consolidate
 """
 import argparse
-
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from src.model import *

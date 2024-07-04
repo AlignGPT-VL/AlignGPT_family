@@ -48,7 +48,6 @@ def _tokenize_fn(strings: Sequence[str],
     )
 
 
-# =====================================================================================================
 def _mask_targets(target, tokenized_lens, speakers):
     # cur_idx = 0
     cur_idx = tokenized_lens[0]
@@ -80,7 +79,6 @@ def _add_speaker_and_signal(header, source, get_conversation=True):
     conversation += BEGIN_SIGNAL
     return conversation
 
-# =====================================================================================================
 def preprocess_multimodal(
     sources: Sequence[str],
     data_args: DataArguments
@@ -90,11 +88,8 @@ def preprocess_multimodal(
         return sources
 
     for source in sources:
-        # len(sources) 为 1
         for sentence in source:
-            # 每一个 sentence 来自人类或GPT
             if DEFAULT_IMAGE_TOKEN in sentence['value']:
-                # 把 <image> 符号置于开始，并换行
                 sentence['value'] = sentence['value'].replace(DEFAULT_IMAGE_TOKEN, '').strip()
                 sentence['value'] = DEFAULT_IMAGE_TOKEN + '\n' + sentence['value']
                 sentence['value'] = sentence['value'].strip()
@@ -109,7 +104,6 @@ def preprocess_multimodal(
 
     return sources
 
-# =====================================================================================================
 def preprocess_llama_2(
     sources,
     tokenizer: transformers.PreTrainedTokenizer,
@@ -118,11 +112,9 @@ def preprocess_llama_2(
     conv = conversation_lib.default_conversation.copy()
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
 
-    # Apply prompt templates
     conversations = []
     for i, source in enumerate(sources):
         if roles[source[0]["from"]] != conv.roles[0]:
-            # Skip the first one if it is not from human
             source = source[1:]
 
         conv.messages = []
@@ -131,8 +123,6 @@ def preprocess_llama_2(
             assert role == conv.roles[j % 2], f"{i}"
             conv.append_message(role, sentence["value"])
         conversations.append(conv.get_prompt())
-
-    # Tokenize conversations
 
     if has_image:
         input_ids = torch.stack([tokenizer_image_token(prompt, tokenizer, return_tensors='pt') for prompt in conversations], dim=0)
@@ -148,8 +138,6 @@ def preprocess_llama_2(
     targets = input_ids.clone()
 
     assert conv.sep_style == conversation_lib.SeparatorStyle.LLAMA_2
-
-    # Mask targets
     sep = "[/INST] "
     for conversation, target in zip(conversations, targets):
         total_len = int(target.ne(tokenizer.pad_token_id).sum())
@@ -199,11 +187,9 @@ def preprocess_llama_bos(
     conv = conversation_lib.default_conversation.copy()
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
 
-    # Apply prompt templates
     conversations = []
     for i, source in enumerate(sources):
         if roles[source[0]["from"]] != conv.roles[0]:
-            # Skip the first one if it is not from human
             source = source[1:]
 
         conv.messages = []
@@ -212,8 +198,6 @@ def preprocess_llama_bos(
             assert role == conv.roles[j % 2], f"{i}"
             conv.append_message(role, sentence["value"])
         conversations.append(conv.get_prompt())
-
-    # Tokenize conversations
 
     if has_image:
         input_ids = torch.stack(
@@ -231,7 +215,6 @@ def preprocess_llama_bos(
 
     assert conv.sep_style == conversation_lib.SeparatorStyle.TWO
 
-    # Mask targets
     sep = conv.sep + conv.roles[1] + ": "
     for conversation, target in zip(conversations, targets):
         total_len = int(target.ne(tokenizer.pad_token_id).sum())
@@ -283,29 +266,21 @@ def preprocess_v1(
     tokenizer: transformers.PreTrainedTokenizer,
     has_image: bool = False
 ) -> Dict:
-    conv = conversation_lib.default_conversation.copy() # 复制了 Conversion() 类实例 conv_vicuna_v1
+    conv = conversation_lib.default_conversation.copy()
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
-
-    # Apply prompt templates
     conversations = []
-    for i, source in enumerate(sources): # 只循环一次
-        # source = [{...}, {...}, {...}]
+    for i, source in enumerate(sources):
         if roles[source[0]["from"]] != conv.roles[0]:
-            # Skip the first one if it is not from human
             source = source[1:]
 
-        conv.messages = [] # 元组 --> 列表
-        for j, sentence in enumerate(source): # 真正循环人和GPT的每一句话
+        conv.messages = []
+        for j, sentence in enumerate(source):
             role = roles[sentence["from"]]
             assert role == conv.roles[j % 2], f"{i}"
-            conv.append_message(role, sentence["value"]) # [role, message]
-        conversations.append(conv.get_prompt()) # ret是一个长字符串，len(conversations) 为 1
+            conv.append_message(role, sentence["value"])
+        conversations.append(conv.get_prompt())
 
-    # Tokenize conversations
     if has_image:
-        # 对整体的对话判断有没有图片
-        # 只会进入这个条件
-        # 只有一个句子，带有 image 的 id
         input_ids = torch.stack([tokenizer_image_token(prompt, tokenizer, return_tensors='pt') for prompt in conversations], dim=0)
     else:
         input_ids = tokenizer(
@@ -316,39 +291,36 @@ def preprocess_v1(
             truncation=True,
         ).input_ids
 
-    targets = input_ids.clone() # 为什么这里没有用 deepcopy() ？
+    targets = input_ids.clone()
 
     assert conv.sep_style == conversation_lib.SeparatorStyle.TWO
 
-    # Mask targets
-    sep = conv.sep + conv.roles[1] + ": " # ' ASSISTANT: '
-    for conversation, target in zip(conversations, targets): # 只循环一次
+    sep = conv.sep + conv.roles[1] + ": "
+    for conversation, target in zip(conversations, targets):
         total_len = int(target.ne(tokenizer.pad_token_id).sum())
 
-        rounds = conversation.split(conv.sep2) # 按轮次拆分对话
+        rounds = conversation.split(conv.sep2)
         cur_len = 1
-        target[:cur_len] = IGNORE_INDEX # 把第一个起始input id换成 -100
-        for i, rou in enumerate(rounds): # 循环每一轮对话
+        target[:cur_len] = IGNORE_INDEX
+        for i, rou in enumerate(rounds):
             if rou == "":
                 break
 
-            parts = rou.split(sep) # 按角色把对话拆分成两个句子
+            parts = rou.split(sep)
             if len(parts) != 2:
                 break
-            parts[0] += sep # '(...)USER: ... ASSISTANT: '
+            parts[0] += sep
 
             if has_image:
-                # 对于可能含有 <image> 的句子进行处理
-                # 若没有，那么相当于 else 语句里的情况
                 round_len = len(tokenizer_image_token(rou, tokenizer))
-                instruction_len = len(tokenizer_image_token(parts[0], tokenizer)) - 2 # -2 是不 mask 掉 ASSISTANT: 
+                instruction_len = len(tokenizer_image_token(parts[0], tokenizer)) - 2
             else:
                 round_len = len(tokenizer(rou).input_ids)
                 instruction_len = len(tokenizer(parts[0]).input_ids) - 2
 
-            target[cur_len : cur_len + instruction_len] = IGNORE_INDEX # mask 用户部分（系统部分）的词
+            target[cur_len : cur_len + instruction_len] = IGNORE_INDEX
 
-            cur_len += round_len # TODO：round_len 没有包含 </s> 的长度
+            cur_len += round_len
         target[cur_len:] = IGNORE_INDEX
 
         # if cur_len < tokenizer.model_max_length:
@@ -371,12 +343,9 @@ def preprocess_llama3_v1(
 ) -> Dict:
     conv = conversation_lib.default_conversation.copy()
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
-
-    # Apply prompt templates
     conversations = []
     for i, source in enumerate(sources):
         if roles[source[0]["from"]] != conv.roles[0]:
-            # Skip the first one if it is not from human
             source = source[1:]
 
         conv.messages = []
@@ -385,8 +354,6 @@ def preprocess_llama3_v1(
             assert role == conv.roles[j % 2], f"{i}"
             conv.append_message(role, sentence["value"])
         conversations.append(conv.get_prompt())
-
-    # Tokenize conversations
 
     if has_image:
         input_ids = torch.stack(
@@ -404,7 +371,6 @@ def preprocess_llama3_v1(
 
     assert conv.sep_style == conversation_lib.SeparatorStyle.TWO
 
-    # Mask targets
     sep = conv.sep + conv.roles[1] + ": "
     for conversation, target in zip(conversations, targets):
         total_len = int(target.ne(tokenizer.pad_token_id).sum())
@@ -460,12 +426,9 @@ def preprocess_llama_3(
     conv = conversation_lib.default_conversation.copy()
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
     print(roles)
-
-    # Apply prompt templates
     conversations = []
     for i, source in enumerate(sources):
         if roles[source[0]["from"]] != conv.roles[0]:
-            # Skip the first one if it is not from human
             source = source[1:]
 
         conv.messages = []
@@ -474,8 +437,6 @@ def preprocess_llama_3(
             assert role == conv.roles[j % 2], f"{i}"
             conv.append_message(role, sentence["value"])
         conversations.append(conv.get_prompt())
-
-    # Tokenize conversations
 
     if has_image:
         input_ids = torch.stack([tokenizer_image_token(prompt, tokenizer, return_tensors='pt') for prompt in conversations], dim=0)
@@ -491,17 +452,15 @@ def preprocess_llama_3(
     targets = input_ids.clone()
     assert conv.sep_style == conversation_lib.SeparatorStyle.LLAMA_3
 
-    # Mask targets
     sep = conv.sep + conv.roles[1]
     for conversation, target in zip(conversations, targets):
         total_len = int(target.ne(tokenizer.pad_token_id).sum())
 
         rounds = conversation.split(conv.sep)
-        re_rounds = [conv.sep.join(rounds[:3])] # system + user + gpt
+        re_rounds = [conv.sep.join(rounds[:3])]
         for conv_idx in range(3, len(rounds), 2):
-            re_rounds.append(conv.sep.join(rounds[conv_idx:conv_idx+2]))    # user + gpt
+            re_rounds.append(conv.sep.join(rounds[conv_idx:conv_idx+2]))
         
-        # include <bos> for all rounds
         cur_len = 1
         target[:cur_len] = IGNORE_INDEX
         for i, rou in enumerate(re_rounds):
@@ -513,8 +472,6 @@ def preprocess_llama_3(
                 print(f"WARNING: parts!=: {parts}")
                 break
             parts[0] += sep
-
-            # include <bos> for all rounds
             if has_image:
                 round_len = len(tokenizer_image_token(rou, tokenizer)) - 1
                 instruction_len = len(tokenizer_image_token(parts[0], tokenizer)) - 2
@@ -522,7 +479,6 @@ def preprocess_llama_3(
                 round_len = len(tokenizer(rou).input_ids) - 1
                 instruction_len = len(tokenizer(parts[0]).input_ids) - 2
 
-            # include <|eot_id|> for all rounds
             round_len += 1
             instruction_len += 1
 
@@ -552,12 +508,9 @@ def preprocess_gemma(
 ) -> Dict:
     conv = conversation_lib.default_conversation.copy()
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
-
-    # Apply prompt templates
     conversations = []
     for i, source in enumerate(sources):
         if roles[source[0]["from"]] != conv.roles[0]:
-            # Skip the first one if it is not from human
             source = source[1:]
 
         conv.messages = []
@@ -566,8 +519,6 @@ def preprocess_gemma(
             assert role == conv.roles[j % 2], f"{i}"
             conv.append_message(role, sentence["value"])
         conversations.append(conv.get_prompt())
-
-    # Tokenize conversations
 
     if has_image:
         input_ids = torch.stack([tokenizer_image_token(prompt, tokenizer, return_tensors='pt') for prompt in conversations], dim=0)
@@ -583,7 +534,6 @@ def preprocess_gemma(
     targets = input_ids.clone()
     assert conv.sep_style == conversation_lib.SeparatorStyle.GEMMA
 
-    # Mask targets
     sep = "<start_of_turn>" + conv.sep + conv.roles[1] + "\n"
     for conversation, target in zip(conversations, targets):
         total_len = int(target.ne(tokenizer.pad_token_id).sum())
@@ -603,10 +553,10 @@ def preprocess_gemma(
 
             if has_image:
                 round_len = len(tokenizer_image_token(rou, tokenizer))
-                instruction_len = len(tokenizer_image_token(parts[0], tokenizer)) - 1 # exclude <bos>
+                instruction_len = len(tokenizer_image_token(parts[0], tokenizer)) - 1
             else:
                 round_len = len(tokenizer(rou).input_ids)
-                instruction_len = len(tokenizer(parts[0]).input_ids) - 1 # exclude <bos>
+                instruction_len = len(tokenizer(parts[0]).input_ids) - 1
 
             target[cur_len : cur_len + instruction_len] = IGNORE_INDEX
 
@@ -630,18 +580,15 @@ def preprocess_plain(
     sources: Sequence[str],
     tokenizer: transformers.PreTrainedTokenizer,
 ) -> Dict:
-    # add end signal and concatenate together
     conversations = []
-    for source in sources: # 只循环一次
-        assert len(source) == 2 # 只有一轮对话
+    for source in sources:
+        assert len(source) == 2
         assert DEFAULT_IMAGE_TOKEN in source[0]['value']
         
         source[0]['value'] = DEFAULT_IMAGE_TOKEN
-        # <image>[sentence]\n
         conversation = source[0]['value'] + source[1]['value'] + conversation_lib.default_conversation.sep
         conversations.append(conversation)
     
-    # tokenize conversations
     input_ids = [tokenizer_image_token(prompt, tokenizer, return_tensors='pt') for prompt in conversations]
     targets = copy.deepcopy(input_ids)
     for target, source in zip(targets, sources):
@@ -690,15 +637,11 @@ def preprocess(
         return preprocess_v1(sources, tokenizer, has_image=has_image)
     
     # =====================================================================
-    # TODO：不会运行下面这部分处理的代码
-     
-    # add end signal and concatenate together
     conversations = []
     for source in sources:
         header = f"{conversation_lib.default_conversation.system}\n\n"
         conversation = _add_speaker_and_signal(header, source)
         conversations.append(conversation)
-    # tokenize conversations
     def get_tokenize_len(prompts):
         return [len(tokenizer_image_token(prompt, tokenizer)) for prompt in prompts]
 
@@ -761,8 +704,6 @@ class LazySupervisedDataset(Dataset):
         
         
         if 'image' in sources[0]:
-            # 此时的 sources[0] 是 json 文件中的一整条数据
-            # 包括 id、image、conversations、similairity 等键
             image_file = self.list_data_dict[i]['image']
             image_folder = self.data_args.image_folder
             processor = self.data_args.image_processor
@@ -785,16 +726,11 @@ class LazySupervisedDataset(Dataset):
             else:
                 image = processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
             
-            # 调整 <image> 在句子中的位置
-            # 然后此时将 sources[0] 变成对话的列表
             sources = preprocess_multimodal(
                 copy.deepcopy([e["conversations"] for e in sources]),
                 self.data_args)
         else:
             sources = copy.deepcopy([e["conversations"] for e in sources])
-        
-        # 对数据按照 version 和模板进行预处理
-        # 预训练和微调时不同
         data_dict = preprocess(
             sources,
             self.tokenizer,
@@ -803,13 +739,9 @@ class LazySupervisedDataset(Dataset):
         if isinstance(i, int):
             data_dict = dict(input_ids=data_dict["input_ids"][0],
                              labels=data_dict["labels"][0])
-
-        # image exist in the data
         if 'image' in self.list_data_dict[i]:
             data_dict['image'] = image
         elif self.data_args.is_multimodal:
-            # print('no image')
-            # print(self.list_data_dict[i])
             crop_size = self.data_args.image_processor.crop_size
             data_dict['image'] = torch.zeros(3, crop_size['height'], crop_size['width'])
             

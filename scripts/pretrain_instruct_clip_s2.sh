@@ -16,9 +16,6 @@ FT_OUTPUT=aligngpt-7b_s2_1008
 # S2_SCACLES='336,672'
 S2_SCACLES='336,672,1008'
 
-# --data_path ${MAIN_DIR}/playground/data/LLaVA-Pretrain/blip_laion_cc_sbu_558k_with_similarity_number.json \
-# --data_path ${CUR_DIR}/data/test.json \
-
 deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src/train/train_mem_flash.py \
     --deepspeed ${CUR_DIR}/scripts/zero2.json \
     --model_name_or_path ${LLM_DIR}/vicuna-7b-v1.5 \

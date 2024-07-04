@@ -21,7 +21,7 @@ class CLIPVisionTower(nn.Module):
     def load_model(self):
         self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
         self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name)
-        self.vision_tower.requires_grad_(False) # freeze the parameters of vision model
+        self.vision_tower.requires_grad_(False)
 
         self.is_loaded = True
 
@@ -79,9 +79,7 @@ class CLIPVisionTower(nn.Module):
 
 class CLIPVisionTowerS2(CLIPVisionTower):
     def __init__(self, vision_tower, args, delay_load=False):
-        # self.s2_scales = getattr(args, 's2_scales', '336,672,1008')
         self.s2_scales = getattr(args, 's2_scales', '336')
-        # print(self.s2_scales)
         self.s2_scales = list(map(int, self.s2_scales.split(',')))
         self.s2_scales.sort()
         self.s2_split_size = self.s2_scales[0]
@@ -97,8 +95,6 @@ class CLIPVisionTowerS2(CLIPVisionTower):
         except ImportError:
             raise ImportError('Package s2wrapper not found! Please install by running: \npip install git+https://github.com/bfshi/scaling_on_scales.git')
         self.multiscale_forward = multiscale_forward
-
-        # change resize/crop size in preprocessing to the largest image size in s2_scale
         if not delay_load or getattr(args, 'unfreeze_mm_vision_tower', False):
             self.image_processor.size['shortest_edge'] = self.s2_image_size
             self.image_processor.crop_size['height'] = self.image_processor.crop_size['width'] = self.s2_image_size

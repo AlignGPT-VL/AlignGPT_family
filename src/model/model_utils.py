@@ -2,7 +2,6 @@ from transformers import AutoConfig
 
 
 def auto_upgrade(config):
-    # TODO: check later
     cfg = AutoConfig.from_pretrained(config)
     if 'aligngpt' in config and 'aligngpt' not in cfg.model_type:
         assert cfg.model_type == 'llama'

@@ -10,7 +10,6 @@ PT_OUTPUT=aligngpt-7b-pretrain_mistral
 LM3_DIR=/workspace/hal/llava_model/Mistral-7B-Instruct-v0.2
 
 BIN_NAME=mm_projector_align.bin
-
 FT_OUTPUT=aligngpt-7b_mistral
 
 deepspeed --include localhost:0,1,2,3,4,5,6,7 --master_port=30000 ${CUR_DIR}/src/train/train_mem_flash.py \

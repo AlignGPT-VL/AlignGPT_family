@@ -9,13 +9,13 @@
 #     exit 1
 # fi
 
-# python -m llava.eval.model_vqa_qbench \
-#     --model-path /workspace/hal/checkpoints/llava-v1.5-7b-finetune-align-A800-8-8-4-8-16-1-imprv \
-#     --image-folder /workspace/hal/LLaVA/playground/data/eval/qbench/images/ \
-#     --questions-file /workspace/hal/LLaVA/playground/data/eval/qbench/llvisionqa_dev.json \
-#     --answers-file /workspace/hal/LLaVA/playground/data/eval/qbench/llava-v1.5-7b-finetune-align-A800-8-8-4-8-16-1-imprv.jsonl \
-#     --conv-mode llava_v1 \
-#     --lang en
+python -m llava.eval.model_vqa_qbench \
+    --model-path /workspace/hal/checkpoints/llava-v1.5-7b-finetune-align-A800-8-8-4-8-16-1-imprv \
+    --image-folder /workspace/hal/LLaVA/playground/data/eval/qbench/images/ \
+    --questions-file /workspace/hal/LLaVA/playground/data/eval/qbench/llvisionqa_dev.json \
+    --answers-file /workspace/hal/LLaVA/playground/data/eval/qbench/llava-v1.5-7b-finetune-align-A800-8-8-4-8-16-1-imprv.jsonl \
+    --conv-mode llava_v1 \
+    --lang en
 
 python /workspace/hal/LLaVA/playground/data/eval/qbench/format_qbench.py \
     --filepath /workspace/hal/LLaVA/playground/data/eval/qbench/llava-v1.5-7b-finetune-align-A800-8-8-4-8-16-1-imprv.jsonl

@@ -17,31 +17,31 @@ CKPT="aligngpt-7b_llama3"
 SPLIT="llava_vqav2_mscoco_test-dev2015"
 MODEL_PATH=/workspace/hal/AlignGPT/checkpoints/${CKPT} # 修改
 
-# for IDX in $(seq 0 $((CHUNKS-1))); do
-#     CUDA_VISIBLE_DEVICES=${GPULIST[$IDX]} python -m src.eval.model_vqa_loader \
-#         --model-path  ${MODEL_PATH} \
-#         --inference_mode ${INF_MODE} \
-#         --question-file ${DATA_DIR}/eval/vqav2/$SPLIT.jsonl \
-#         --image-folder ${DATA_DIR}/eval/vqav2/test2015 \
-#         --answers-file ${DATA_DIR}/eval/vqav2/answers/$SPLIT/$CKPT/${CHUNKS}_${IDX}.jsonl \
-#         --num-chunks $CHUNKS \
-#         --chunk-idx $IDX \
-#         --temperature 0 \
-#         --conv-mode llama_3 &
-# done
+for IDX in $(seq 0 $((CHUNKS-1))); do
+    CUDA_VISIBLE_DEVICES=${GPULIST[$IDX]} python -m src.eval.model_vqa_loader \
+        --model-path  ${MODEL_PATH} \
+        --inference_mode ${INF_MODE} \
+        --question-file ${DATA_DIR}/eval/vqav2/$SPLIT.jsonl \
+        --image-folder ${DATA_DIR}/eval/vqav2/test2015 \
+        --answers-file ${DATA_DIR}/eval/vqav2/answers/$SPLIT/$CKPT/${CHUNKS}_${IDX}.jsonl \
+        --num-chunks $CHUNKS \
+        --chunk-idx $IDX \
+        --temperature 0 \
+        --conv-mode llama_3 &
+done
 
-# wait
+wait
 
 # output_file=./playground/data/eval/vqav2/answers/$SPLIT/$CKPT/merge.jsonl
-# output_file=${DATA_DIR}/eval/vqav2/answers/$SPLIT/$CKPT/merge_1.jsonl
+output_file=${DATA_DIR}/eval/vqav2/answers/$SPLIT/$CKPT/merge_1.jsonl
 
 # Clear out the output file if it exists.
-# > "$output_file"
+> "$output_file"
 
-# # Loop through the indices and concatenate each file.
-# for IDX in $(seq 0 $((CHUNKS-1))); do
-#     cat ${DATA_DIR}/eval/vqav2/answers/$SPLIT/$CKPT/${CHUNKS}_${IDX}.jsonl >> "$output_file"
-# done
+# Loop through the indices and concatenate each file.
+for IDX in $(seq 0 $((CHUNKS-1))); do
+    cat ${DATA_DIR}/eval/vqav2/answers/$SPLIT/$CKPT/${CHUNKS}_${IDX}.jsonl >> "$output_file"
+done
 
 python ${CUR_DIR}/scripts/convert_vqav2_for_submission.py --split $SPLIT --ckpt $CKPT --dir ${DATA_DIR}/eval/vqav2
 
