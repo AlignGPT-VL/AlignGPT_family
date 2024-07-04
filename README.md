@@ -83,9 +83,6 @@ Please download the weights for LLM, Vision Backbone and place them in the `./pl
 | AlignGPT | [gemma-7b](https://huggingface.co/google/gemma-7b/tree/main) | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | 336*336 |To be released|To be released|
 | AlignGPT | [Mistral-7B-Instruct-v0.2](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2/tree/main) | [clip-vit-large-patch14-336](https://huggingface.co/openai/clip-vit-large-patch14-336) | 336*336 |To be released|To be released|
 | AlignGPT | [vicuna-7b-v1.5](https://huggingface.co/lmsys/vicuna-7b-v1.5/tree/main) | [siglip-so400m-patch14-384](https://huggingface.co/google/siglip-so400m-patch14-384/tree/main) | 384*384 |To be released|To be released|
-| AlignGPT | [vicuna-7b-v1.5](https://huggingface.co/lmsys/vicuna-7b-v1.5/tree/main) | [siglip-so400m-patch14-384](https://huggingface.co/google/siglip-so400m-patch14-384/tree/main) | 768*768 |To be released|To be released|
-| AlignGPT | [vicuna-7b-v1.5](https://huggingface.co/lmsys/vicuna-7b-v1.5/tree/main) | [siglip-so400m-patch14-384](https://huggingface.co/google/siglip-so400m-patch14-384/tree/main) | 1152*1152 |To be released|To be released|
-
 
 ## Training
 
